@@ -254,7 +254,9 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		if (key in this._freshTiles) {
 			var tile = this._freshTiles[key].pop();
 			if (!this._freshTiles[key].length) { delete this._freshTiles[key]; }
-			L.Util.requestAnimFrame(done);
+			L.Util.requestAnimFrame(function () {
+			    setTimeout(done, 0);
+			});
 // 			console.log('Got ', key, ' from _freshTiles');
 			return tile;
 		} else {
