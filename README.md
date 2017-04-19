@@ -61,6 +61,29 @@ If you don't want to rely on a CDN to load GoogleMutant, you can:
 
 You can also download a static copy from the CDN, or clone this git repo.
 
+## Webpack
+
+Include the GMaps JS API in your HTML:
+
+```
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY" async defer></script>
+```
+
+Require Leaflet and GoogleMutant in your JS file:
+
+```
+var L = require('leaflet');
+require('leaflet.gridlayer.googlemutant');
+```
+
+Then, you can create an instance of `L.GridLayer.GoogleMutant` on your JS code:
+
+```
+var roads = L.gridLayer.googleMutant({
+	type: 'roadmap'	// valid values are 'roadmap', 'satellite', 'terrain' and 'hybrid'
+}).addTo(map);
+```
+
 ## Known caveats
 
 * `hybrid` mode prunes tiles before needed for no apparent reason, so the map flickers when there is a zoom change.
