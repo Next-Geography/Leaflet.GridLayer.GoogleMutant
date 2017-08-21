@@ -257,7 +257,10 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			sublayer = 0;
 		}
 
-		if (coords) {
+		if (imgNode.src.indexOf('!1scb_client') > 0) {
+			//streetview tiles (shown while draggin pegman). keep them in the google map (map doesn't move at this stage)
+			return; 
+		} else if (coords) {
 			var tileKey = this._tileCoordsToKey(coords);
 			imgNode.style.position = 'absolute';
 			imgNode.style.visibility = 'hidden';
