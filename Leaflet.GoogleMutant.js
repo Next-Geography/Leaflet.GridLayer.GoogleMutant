@@ -428,7 +428,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		if (this._mutantContainer.style.width === size.x &&
 		    this._mutantContainer.style.height === size.y) {
 			return;
-                }
+		}
 		this.setElementSize(this._mutantContainer, size);
 		if (!this._mutant) return;
 		google.maps.event.trigger(this._mutant, 'resize');
