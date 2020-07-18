@@ -447,7 +447,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		// for (let key of Object.keys(this._freshTiles)) {
                 // IE-compatible code, in ecmascript5:
 		for (var key in Object.keys(this._freshTiles)) {
-			if (gZoom !== key.split(':')[2] /* tileZoom */) {
+			if (gZoom !== parseFloat(key.split(':')[2]) /* tileZoom */) { // @utilmind: gZoom is number.
 				delete this._freshTiles[key];
 			}
 		}
@@ -493,7 +493,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			var key2 = key + '/' + i;
 			if (key2 in this._freshTiles) {
 				var tileBounds = this._map && this._keyToBounds(key),
-				    stillVisible = this._map && tileBounds.overlaps(gMapBounds) && (tileZoom === gZoom);
+				    stillVisible = this._map && tileBounds.overlaps(gMapBounds) && (parseFloat(tileZoom) === gZoom); // @utilmind: TileZoom is string, gZoom is number.
 
 				if (!stillVisible) delete this._freshTiles[key2];
 //                              console.log('Prunning of ', key, (!stillVisible))
