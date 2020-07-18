@@ -426,8 +426,9 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	_resize: function () {
 		var size = this._map.getSize();
 		if (this._mutantContainer.style.width === size.x &&
-			this._mutantContainer.style.height === size.y)
+		    this._mutantContainer.style.height === size.y) {
 			return;
+                }
 		this.setElementSize(this._mutantContainer, size);
 		if (!this._mutant) return;
 		google.maps.event.trigger(this._mutant, 'resize');
@@ -491,8 +492,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		for (var i=0; i<this._imagesPerTile; ++i) {
 			var key2 = key + '/' + i;
 			if (key2 in this._freshTiles) {
-				var tileBounds = this._map && this._keyToBounds(key);
-				var stillVisible = this._map && tileBounds.overlaps(gMapBounds) && (tileZoom === gZoom);
+				var tileBounds = this._map && this._keyToBounds(key),
+				    stillVisible = this._map && tileBounds.overlaps(gMapBounds) && (tileZoom === gZoom);
 
 				if (!stillVisible) delete this._freshTiles[key2];
 //                              console.log('Prunning of ', key, (!stillVisible))
