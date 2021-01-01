@@ -121,7 +121,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			L.DomUtil.remove(this._attributionContainer);
 		}
 
-		if (!this._ready) {
+		if (this._ready) {
 			google.maps.event.clearListeners(map, "idle");
 			if (this._mutant) {
 				google.maps.event.clearListeners(this._mutant, "idle");
