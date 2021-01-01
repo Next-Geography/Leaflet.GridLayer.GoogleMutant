@@ -51,8 +51,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	initialize: function (options) {
 		L.GridLayer.prototype.initialize.call(this, options);
 
-		this._isMounted = true;
-
 		this.once("spawned", function () {
 			if (this._subLayers) {
 				//restore previously added google layers
@@ -86,9 +84,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		}
 
 		GAPIPromise.then(() => {
-			if (!this._isMounted) {
-				return;
-			}
 			this._ready = true;
 
 			this._initMutant();
@@ -126,13 +121,13 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			L.DomUtil.remove(this._attributionContainer);
 		}
 
-		google.maps.event.clearListeners(map, "idle");
-		if (this._mutant) {
-			google.maps.event.clearListeners(this._mutant, "idle");
-		}
+		if (this._ready) {
+			google.maps.event.clearListeners(map, "idle");
+			if (this._mutant) {
+				google.maps.event.clearListeners(this._mutant, "idle");
+			}
+		}		
 		map.off("move moveend", this._update, this);
-
-		this._isMounted = false;
 	},
 
 	// 🍂method addGoogleLayer(name: String, options?: Object): this
