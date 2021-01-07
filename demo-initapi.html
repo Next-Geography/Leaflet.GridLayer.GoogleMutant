@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Leaflet debug page</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" crossorigin="" />
+		<script src="https://unpkg.com/leaflet/dist/leaflet-src.js" crossorigin=""></script>
+
+		<!--script src="dist/Leaflet.GoogleMutant.js"></script-->
+		<script src="https://unpkg.com/leaflet.gridlayer.googlemutant/dist/Leaflet.GoogleMutant.js"></script>
+		<style>
+			#map {
+				left: 0;
+				right: 0;
+				height: 100vh;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="map" class="map"></div>
+
+		<script type="text/javascript">
+			var map = L.map("map").setView([0, 0], 1)
+				.locate({ setView: true, maxZoom: 14 });
+
+			L.GridLayer.GoogleMutant.include({
+				_apiDefaults: { // https://developers.google.com/maps/documentation/javascript/url-params
+					url: "https://maps.googleapis.com/maps/api/js",
+					params: {
+						// key: "YOUR_API_KEY",
+						callback: "__initMap__",
+						// v: "weekly",
+						// libraries="geometry,places",
+						// language: "en",
+						// region: "GB"
+					}
+				},
+
+				_makeUrl: function (options) {
+					var url = options.apiUrl,
+						params = options.apiParams,
+						def = this._apiDefaults;
+					if (!url && !params) { return false; }
+					if (params) {
+						if (typeof params === "string") { params = {key: params}; }
+						params = L.extend({}, def.params, params);
+						url = (url || def.url) +
+							L.Util.getParamString(params,url);
+					}
+					return url;
+				},
+
+				initApi: function (ready) {
+					var script = document.createElement("script");
+					window.__initMap__ = function () {
+						ready();
+						delete window.__initMap__;
+					};
+
+					script.onload =  function () {
+						document.body.removeChild(script);
+					};
+					script.onerror = function () {
+						console.error("API loading failed");
+					};
+					var url = this._makeUrl(this.options);
+					if (!url) {
+						throw new Error("Google API url parameters not found in options.");
+					}
+					script.src = url;
+					document.body.appendChild(script);
+				}
+			});
+
+			var opts = {
+				// specify either:
+				// - apiUrl: string including all required parameters
+				// - apiParams:
+				//   * as String = api key
+				//   * as Object with misc. parameters (`key` is demanded)
+				apiParams: {
+					key: ""
+				}
+			};
+			L.gridLayer.googleMutant(opts).addTo(map);
+		</script>
+	</body>
+</html>
