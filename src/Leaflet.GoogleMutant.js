@@ -12,22 +12,30 @@ this stuff is worth it, you can buy me a beer in return.
 
 import { LRUMap } from "./lru_map.js";
 
-const GAPIPromise = new Promise(function (resolve, reject) {
-	let checkCounter = 0,
-		intervalId = null;
+const GAPIPromise = (function () {
+	let singletonInstance;
+	return function () {
+		if (!singletonInstance) {
+			singletonInstance = new Promise(function (resolve, reject) {
+				let checkCounter = 0,
+					intervalId = null;
 
-	intervalId = setInterval(function () {
-		if (checkCounter >= 20) {
-			clearInterval(intervalId);
-			return reject(new Error("window.google not found after 10 seconds"));
+				intervalId = setInterval(function () {
+					if (checkCounter >= 20) {
+						clearInterval(intervalId);
+						return reject(new Error("window.google not found after 10 seconds"));
+					}
+					if (!!window.google && !!window.google.maps && !!window.google.maps.Map) {
+						clearInterval(intervalId);
+						return resolve(window.google);
+					}
+					++checkCounter;
+				}, 500);
+			});
 		}
-		if (!!window.google && !!window.google.maps && !!window.google.maps.Map) {
-			clearInterval(intervalId);
-			return resolve(window.google);
-		}
-		++checkCounter;
-	}, 500);
-});
+		return singletonInstance;
+	};
+})();
 
 // 🍂class GridLayer.GoogleMutant
 // 🍂extends GridLayer
@@ -85,7 +93,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			map._controlCorners.bottomright.appendChild(this._attributionContainer);
 		}
 
-		GAPIPromise.then(() => {
+		GAPIPromise().then(() => {
 			if (!this._isMounted) {
 				return;
 			}
@@ -142,7 +150,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	// `options`: see https://developers.google.com/maps/documentation/javascript/reference/map
 	addGoogleLayer: function (googleLayerName, options) {
 		if (!this._subLayers) this._subLayers = {};
-		GAPIPromise.then(() => {
+		GAPIPromise().then(() => {
 			var Constructor = google.maps[googleLayerName];
 			var googleLayer = new Constructor(options);
 			if (this._mutant) {
@@ -156,7 +164,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	// 🍂method removeGoogleLayer(name: String): this
 	// Removes layer with the given name from the google Map instance.
 	removeGoogleLayer: function (googleLayerName) {
-		GAPIPromise.then(() => {
+		GAPIPromise().then(() => {
 			var googleLayer = this._subLayers && this._subLayers[googleLayerName];
 			if (googleLayer) {
 				googleLayer.setMap(null);
