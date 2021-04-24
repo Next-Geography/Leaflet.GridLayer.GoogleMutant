@@ -10,8 +10,6 @@ A [LeafletJS](http://leafletjs.com/) plugin to use Google maps basemaps.
 
 -   This plugin doesn't work on IE10 or lower, as [that browser doesn't implement DOM mutation observers](https://caniuse.com/#feat=mutationobserver). Chrome, Firefox, Safari, IE11 and Edge are fine.
 
--   IE11 and [browsers that don't support `Promise`s](https://caniuse.com/#feat=promises) need a polyfill in order to work. See the "Known caveats" section.
-
 -   Starting with v0.11.0, the code relies on `Symbol` and `Map`. IE11 and [browsers that don't support `Symbol`](https://www.caniuse.com/mdn-javascript_builtins_symbol) or [don't support `Map`](https://www.caniuse.com/mdn-javascript_builtins_map) also need polyfills to work.
 
 -   The `maxNativeZoom` functionality introduced in v0.5.0 (thanks, @luiscamacho!) requires Leaflet >1.0.3.
@@ -79,18 +77,6 @@ You can also download a static copy from the CDN, or clone this git repo.
 ## Known caveats
 
 -   `hybrid` mode prunes tiles before needed for no apparent reason, so the map flickers when there is a zoom change.
-
--   If you are targeting IE11, then include the following **before** the `script` element that references
-    the GoogleMutant javascript file:
-
-    ```html
-    <script src="https://unpkg.com/es6-promise@4.0.5/dist/es6-promise.min.js"></script>
-    <script>
-    	ES6Promise.polyfill();
-    </script>
-    ```
-
-    This will polyfill in Javascript Promises for IE.
 
 -   Even though imagery exists at zoom levels up to 23, GoogleMutant caps the max zoom level at 21.
 
