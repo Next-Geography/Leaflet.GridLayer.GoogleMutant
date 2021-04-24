@@ -59,8 +59,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	initialize: function (options) {
 		L.GridLayer.prototype.initialize.call(this, options);
 
-		this._isMounted = true;
-
 		this.once("spawned", function () {
 			if (this._subLayers) {
 				//restore previously added google layers
@@ -94,11 +92,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		}
 
 		GAPIPromise().then(() => {
-			if (!this._isMounted) {
-				return;
-			}
-			this._ready = true;
-
 			this._initMutant();
 
 			map = this._map;
@@ -133,14 +126,9 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		if (this._attributionContainer) {
 			L.DomUtil.remove(this._attributionContainer);
 		}
-
-		google.maps.event.clearListeners(map, "idle");
 		if (this._mutant) {
 			google.maps.event.clearListeners(this._mutant, "idle");
 		}
-		map.off("move moveend", this._update, this);
-
-		this._isMounted = false;
 	},
 
 	// 🍂method addGoogleLayer(name: String, options?: Object): this
@@ -205,7 +193,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 	_initMutant: function () {
 		if (this._mutant) {
-			// reuse old _mutant, just make sure it has the correct size
 			return;
 		}
 
@@ -459,30 +446,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		}
 
 		L.GridLayer.prototype._update.call(this, center);
-	},
-
-	_resize: function () {
-		const factor = this.options.zoomSnap < 1 ? 1.8 : 1;
-		const size = this._map.getSize().multiplyBy(factor);
-		if (
-			this._mutantContainer.style.width === size.x &&
-			this._mutantContainer.style.height === size.y
-		) {
-			return;
-		}
-		this.setElementSize(this._mutantContainer, size);
-		if (!this._mutant) return;
-		google.maps.event.trigger(this._mutant, "resize");
-	},
-
-	_handleZoomAnim: function () {
-		if (!this._mutant) return;
-
-		const center = this._map.getCenter(),
-			_center = new google.maps.LatLng(center.lat, center.lng);
-
-		this._mutant.setCenter(_center);
-		this._mutant.setZoom(Math.round(this._map.getZoom()));
 	},
 });
 
