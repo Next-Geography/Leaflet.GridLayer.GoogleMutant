@@ -98,11 +98,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			if (!map) {
 				return;
 			}
-			var moveevent = this.options.updateWhenIdle ? "moveend" : "move";
-			map.on(moveevent, this._update, this);
-			this.once("remove", function () {
-				this._map.off(moveevent, this._update, this);
-			});
 			//handle layer being added to a map for which there are no Google tiles at the given zoom
 			google.maps.event.addListenerOnce(this._mutant, "idle", () => {
 				if (!this._map) {
@@ -111,8 +106,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				this._checkZoomLevels();
 				this._mutantIsReady = true;
 			});
-
-			this._update();
 		});
 	},
 
@@ -219,6 +212,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				nodes[i].style.pointerEvents = "auto";
 			}
 		});
+
+		this._update();
 
 		// 🍂event spawned
 		// Fired when the mutant has been created.
