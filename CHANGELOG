@@ -1,3 +1,8 @@
+# v0.13.3 (2021-04-25)
+
+* _update: process `center` argument.
+  (initially implemented in 11c23155 but was non-functional due to a bug)
+
 # v0.13.2 (2021-04-24)
 
 * Added a .npmignore file to shrink the size of the NPM package
