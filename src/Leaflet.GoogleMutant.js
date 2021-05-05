@@ -75,12 +75,11 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		}
 
 		waitForAPI(() => {
-			this._initMutant();
-
-			map = this._map;
-			if (!map) {
+			if (!this._map) {
 				return;
 			}
+			this._initMutant();
+
 			//handle layer being added to a map for which there are no Google tiles at the given zoom
 			google.maps.event.addListenerOnce(this._mutant, "idle", () => {
 				if (!this._map) {

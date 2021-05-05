@@ -1,3 +1,7 @@
+# v0.13.4 (2021-05-05)
+
+* Fix race condition in _initMutant when layer was removed before api was ready
+
 # v0.13.3 (2021-04-25)
 
 * _update: process `center` argument.
