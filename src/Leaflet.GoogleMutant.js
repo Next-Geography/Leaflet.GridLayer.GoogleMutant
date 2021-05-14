@@ -401,23 +401,24 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	_update: function (center) {
+		if (!this._mutant) { return; }
+
 		// zoom level check needs to happen before super's implementation (tile addition/creation)
 		// otherwise tiles may be missed if maxNativeZoom is not yet correctly determined
-		if (this._mutant) {
-			center = center || this._map.getCenter();
-			const _center = new google.maps.LatLng(center.lat, center.lng),
-				zoom = Math.round(this._map.getZoom()),
-				mutantZoom = this._mutant.getZoom();
 
-			this._mutant.setCenter(_center);
+		center = center || this._map.getCenter();
+		const _center = new google.maps.LatLng(center.lat, center.lng),
+			zoom = Math.round(this._map.getZoom()),
+			mutantZoom = this._mutant.getZoom();
 
-			//ignore fractional zoom levels
-			if (zoom !== mutantZoom) {
-				this._mutant.setZoom(zoom);
+		this._mutant.setCenter(_center);
 
-				if (this._mutantIsReady) this._checkZoomLevels();
-				//else zoom level check will be done later by 'idle' handler
-			}
+		//ignore fractional zoom levels
+		if (zoom !== mutantZoom) {
+			this._mutant.setZoom(zoom);
+
+			if (this._mutantIsReady) this._checkZoomLevels();
+			//else zoom level check will be done later by 'idle' handler
 		}
 
 		L.GridLayer.prototype._update.call(this, center);
