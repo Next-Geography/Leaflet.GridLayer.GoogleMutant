@@ -72,13 +72,14 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			}
 			this._initMutant();
 
+			if (this._mutantIsReady) { return; }
 			//handle layer being added to a map for which there are no Google tiles at the given zoom
 			google.maps.event.addListenerOnce(this._mutant, "idle", () => {
-				if (!this._map) {
-					return;
-				}
-				this._checkZoomLevels();
 				this._mutantIsReady = true;
+				if (this._map) {
+					const zoom = Math.round(this._map.getZoom());
+					this._checkZoomLevels(zoom);
+				}
 			});
 		});
 	},
@@ -374,11 +375,10 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		return clonedImgNode;
 	},
 
-	_checkZoomLevels: function () {
+	_checkZoomLevels: function (zoomLevel) {
 		//setting the zoom level on the Google map may result in a different zoom level than the one requested
 		//(it won't go beyond the level for which they have data).
-		const zoomLevel = this._map.getZoom(),
-			gMapZoomLevel = this._mutant.getZoom();
+		const gMapZoomLevel = this._mutant.getZoom();
 
 		if (!zoomLevel || !gMapZoomLevel) return;
 
@@ -414,7 +414,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			if (zoom !== mutantZoom) {
 				this._mutant.setZoom(zoom);
 
-				if (this._mutantIsReady) this._checkZoomLevels();
+				if (this._mutantIsReady) this._checkZoomLevels(zoom);
 				//else zoom level check will be done later by 'idle' handler
 			}
 		}
