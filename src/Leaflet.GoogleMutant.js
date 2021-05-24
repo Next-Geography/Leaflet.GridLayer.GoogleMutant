@@ -186,13 +186,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 		this._mutant = map;
 
-		google.maps.event.addListenerOnce(map, "idle", () => {
-			var nodes = this._mutantContainer.querySelectorAll("a");
-			for (var i = 0; i < nodes.length; ++i) {
-				nodes[i].style.pointerEvents = "auto";
-			}
-		});
-
 		this._update();
 
 		// 🍂event spawned
@@ -268,6 +261,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 					if (node.style.zIndex == 1000000) {
 						this._map._controlCorners.bottomleft.appendChild(node);
 						this._logoContainer = node;
+						node.style.pointerEvents = "auto";
 					}
 				}
 			}
