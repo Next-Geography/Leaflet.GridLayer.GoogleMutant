@@ -47,8 +47,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		this._tileCallbacks = {}; // Callbacks for promises for tiles that are expected
 		this._lru = new LRUMap(100); // Tile LRU cache
 
-		this._imagesPerTile = this.options.type === "hybrid" ? 2 : 1;
-
 		this._boundOnMutatedImage = this._onMutatedImage.bind(this);
 	},
 
@@ -395,7 +393,12 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			//else zoom level check will be done later by 'idle' handler
 		}
 
+		this._setImagesPerTile();
 		L.GridLayer.prototype._update.call(this, center);
+	},
+
+	_setImagesPerTile: function () {
+		this._imagesPerTile = this.options.type === "hybrid" ? 2 : 1;
 	},
 
 	// @method whenReady(fn: Function, context?: Object): this
