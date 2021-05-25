@@ -269,10 +269,23 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	// This will not be moved around, just removed from the DOM.
 	_staticRegExp: /StaticMapService\.GetMapImage/,
 
+	_roadmapSubstr: [
+		"!2sRoadmap!",
+		"!2sNonRoadmap!",       // roadmap + BicyclingLayer
+		"!2sTransitFocused!",   // roadmap + TransitLayer
+		"!2sTerrain!"
+	],
+
+	_isRoadmap: function (url) {
+		return this._roadmapSubstr.some(function (substr) {
+			return url.search(substr) !== -1;
+		});
+	},
+
 	_onMutatedImage: function _onMutatedImage(imgNode) {
 		let coords;
 		let match = imgNode.src.match(this._roadRegexp);
-		let sublayer = 0;
+		let sublayer;
 
 		if (match) {
 			coords = {
@@ -280,8 +293,12 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				x: match[2],
 				y: match[3],
 			};
-			if (this._imagesPerTile > 1) {
-				sublayer = 1;
+			if (this._isRoadmap(imgNode.src)) {
+				sublayer = 0;
+			} else if (imgNode.src.search("!2sRoadmapSatellite!") !== -1) {
+				sublayer = 1; // hybrid
+			} else {
+				sublayer = 2; // other (e.g. kml)
 			}
 		} else {
 			match = imgNode.src.match(this._satRegexp);
@@ -334,6 +351,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				imgNode = this._lru.get(key2);
 			if (imgNode) {
 				const clonedImgNode = this._clone(imgNode, i);
+				clonedImgNode._fromCache = true; // for debug
 				tileContainer.appendChild(clonedImgNode);
 				loaded[i] = true;
 			} else {
