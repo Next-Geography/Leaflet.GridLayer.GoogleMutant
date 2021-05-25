@@ -281,7 +281,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				y: match[3],
 			};
 			if (this._imagesPerTile > 1) {
-				imgNode.style.zIndex = 1;
 				sublayer = 1;
 			}
 		} else {
@@ -293,20 +292,18 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 					z: match[3],
 				};
 			}
-			// imgNode.style.zIndex = 0;
 			sublayer = 0;
 		}
 
 		if (coords) {
-			var tileKey = this._tileCoordsToKey(coords);
-			imgNode.style.position = "absolute";
+			const key = this._tileCoordsToKey(coords);
 
-			var key = tileKey + "/" + sublayer;
 			// Cache img so it can also be used in subsequent tile requests
-			this._lru.set(key, imgNode);
+			const key2 = key + "/" + sublayer;
+			this._lru.set(key2, imgNode);
 
-			if (this._tileCallbacks[tileKey]) {
-				this._tileCallbacks[tileKey].forEach(callback => callback(imgNode, sublayer));
+			if (this._tileCallbacks[key]) {
+				this._tileCallbacks[key].forEach(callback => callback(imgNode, sublayer));
 			}
 		}
 	},
@@ -321,7 +318,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			const key2 = key + "/" + i,
 				imgNode = this._lru.get(key2);
 			if (imgNode) {
-				tileContainer.appendChild(this._clone(imgNode));
+				const clonedImgNode = this._clone(imgNode, i);
+				tileContainer.appendChild(clonedImgNode);
 				loaded[i] = true;
 			} else {
 				loaded[i] = false;
@@ -332,7 +330,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		} else {
 			this._tileCallbacks[key] = this._tileCallbacks[key] || [];
 			this._tileCallbacks[key].push(function (imgNode, sublayer) {
-				tileContainer.appendChild(this._clone(imgNode));
+				const clonedImgNode = this._clone(imgNode, sublayer);
+				tileContainer.appendChild(clonedImgNode);
 				loaded[sublayer] = true;
 				if (loaded.indexOf(false) === -1) {
 					done(null, tileContainer);
@@ -343,9 +342,11 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		return tileContainer;
 	},
 
-	_clone: function (imgNode) {
+
+	_clone: function (imgNode, sublayer) {
 		const clonedImgNode = imgNode.cloneNode(true);
-		clonedImgNode.style.visibility = "visible";
+		clonedImgNode.style.position = "absolute";
+		clonedImgNode.style.zIndex = sublayer;
 		return clonedImgNode;
 	},
 
