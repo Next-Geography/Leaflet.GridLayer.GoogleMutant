@@ -345,8 +345,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			tileContainer = L.DomUtil.create("div");
 
 		tileContainer.style.textAlign = "left";
-		const loaded = [];
-		for (let i = 0; i < this._imagesPerTile; ++i) {
+		const loaded = this._imagesPerTile.slice(); // track already loaded sublayers
+		loaded.forEach(function (_, i) {
 			const key2 = key + "/" + i,
 				imgNode = this._lru.get(key2);
 			if (imgNode) {
@@ -354,10 +354,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				clonedImgNode._fromCache = true; // for debug
 				tileContainer.appendChild(clonedImgNode);
 				loaded[i] = true;
-			} else {
-				loaded[i] = false;
 			}
-		}
+		}, this);
 		if (loaded.indexOf(false) === -1) {
 			L.Util.requestAnimFrame(done.bind(this, null, tileContainer));
 		} else {
@@ -440,7 +438,10 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	_setImagesPerTile: function () {
-		this._imagesPerTile = this.options.type === "hybrid" ? 2 : 1;
+		this._imagesPerTile = this.options.type === "hybrid" ? [false, false] : [false];
+		if (this._subLayers && this._subLayers.KmlLayer) {
+			this._imagesPerTile[2] = false;
+		}
 	},
 
 	// @method whenReady(fn: Function, context?: Object): this
