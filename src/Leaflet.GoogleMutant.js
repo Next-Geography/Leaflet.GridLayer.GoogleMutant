@@ -304,7 +304,22 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 			if (this._tileCallbacks[key]) {
 				this._tileCallbacks[key].forEach(callback => callback(imgNode, sublayer));
+			} else {
+				const tile = this._tiles[key];
+				if (tile) {
+					this._updateTile(tile, imgNode, sublayer);
+				}
 			}
+		}
+	},
+
+	_updateTile: function (tile, imgNode, sublayer) {
+		const clonedImgNode = this._clone(imgNode, sublayer);
+		const oldImg = tile.el.querySelector(`img[data-sublayer="${sublayer}"]`);
+		if (oldImg) {
+			tile.el.replaceChild(clonedImgNode, oldImg);
+		} else {
+			tile.el.appendChild(clonedImgNode);
 		}
 	},
 
@@ -330,6 +345,11 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		} else {
 			this._tileCallbacks[key] = this._tileCallbacks[key] || [];
 			this._tileCallbacks[key].push(function (imgNode, sublayer) {
+				if (loaded[sublayer]) {
+					// image can first came from our cache, then updated by google map
+					this._updateTile(this._tiles[key], imgNode, sublayer);
+					return;
+				}
 				const clonedImgNode = this._clone(imgNode, sublayer);
 				tileContainer.appendChild(clonedImgNode);
 				loaded[sublayer] = true;
@@ -347,6 +367,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		const clonedImgNode = imgNode.cloneNode(true);
 		clonedImgNode.style.position = "absolute";
 		clonedImgNode.style.zIndex = sublayer;
+		clonedImgNode.dataset.sublayer = sublayer;
 		return clonedImgNode;
 	},
 
