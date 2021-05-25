@@ -297,10 +297,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			// Cache img so it can also be used in subsequent tile requests
 			this._lru.set(key, imgNode);
 
-			if (key in this._tileCallbacks && this._tileCallbacks[key]) {
-				// Use the tile for *all* pending callbacks. They'll be cloned anyway.
-				this._tileCallbacks[key].forEach((callback) => callback(imgNode));
-				delete this._tileCallbacks[key];
+			if (this._tileCallbacks[tileKey]) {
+				this._tileCallbacks[tileKey].forEach(callback => callback(imgNode, sublayer));
 			}
 		}
 	},
@@ -310,33 +308,29 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			tileContainer = L.DomUtil.create("div");
 
 		tileContainer.style.textAlign = "left";
-		tileContainer.dataset.pending = this._imagesPerTile;
-		done = done.bind(this, null, tileContainer);
-
-		for (var i = 0; i < this._imagesPerTile; ++i) {
+		const loaded = [];
+		for (let i = 0; i < this._imagesPerTile; ++i) {
 			const key2 = key + "/" + i,
 				imgNode = this._lru.get(key2);
 			if (imgNode) {
 				tileContainer.appendChild(this._clone(imgNode));
-				--tileContainer.dataset.pending;
+				loaded[i] = true;
 			} else {
-				this._tileCallbacks[key2] = this._tileCallbacks[key2] || [];
-				this._tileCallbacks[key2].push(
-					function (c /*, k2*/) {
-						return function (imgNode) {
-							c.appendChild(this._clone(imgNode));
-							--c.dataset.pending;
-							if (!parseInt(c.dataset.pending)) {
-								done();
-							}
-						}.bind(this);
-					}.bind(this)(tileContainer /*, key2*/)
-				);
+				loaded[i] = false;
 			}
 		}
-
-		if (!parseInt(tileContainer.dataset.pending)) {
-			L.Util.requestAnimFrame(done);
+		if (loaded.indexOf(false) === -1) {
+			L.Util.requestAnimFrame(done.bind(this, null, tileContainer));
+		} else {
+			this._tileCallbacks[key] = this._tileCallbacks[key] || [];
+			this._tileCallbacks[key].push(function (imgNode, sublayer) {
+				tileContainer.appendChild(this._clone(imgNode));
+				loaded[sublayer] = true;
+				if (loaded.indexOf(false) === -1) {
+					done(null, tileContainer);
+					delete this._tileCallbacks[key];
+				}
+			}.bind(this));
 		}
 		return tileContainer;
 	},
