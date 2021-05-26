@@ -45,6 +45,9 @@
 			road.addGoogleLayer('KmlLayer', {
 				url: 'https://googlearchive.github.io/js-v2-samples/ggeoxml/cta.kml',
 				preserveViewport: true
+			}).on({
+				tileerror: console.error,
+				tilesublayererror: console.warn
 			});
 		</script>
 	</body>

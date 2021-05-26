@@ -80,7 +80,22 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				this._checkZoomLevels();
 				this._mutantIsReady = true;
 			});
+			this._setupTilesTimeout();
 		});
+	},
+
+	_setupTilesTimeout: function () {
+		const handle = google.maps.event.addListener(this._mutant, "tilesloaded", () => {
+			const expired = Object.keys(this._tileCallbacks);
+			setTimeout(() => {
+				expired.forEach((key) => {
+					if (this._tileCallbacks[key]) {
+						this._tileCallbacks[key](null, "timeout");
+					}
+				});
+			}, 100);
+		});
+		this.once("remove", google.maps.event.removeListener.bind(null, handle));
 	},
 
 	onRemove: function (map) {
@@ -360,7 +375,25 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			L.Util.requestAnimFrame(done.bind(this, null, tileContainer));
 		} else {
 			this._tileCallbacks[key] = this._tileCallbacks[key] || [];
-			this._tileCallbacks[key].push(function (imgNode, sublayer) {
+			this._tileCallbacks[key].push(function (imgNode, sublayer) { // or (null, "error message")
+				if (!imgNode) {
+					const err = sublayer;
+					const part_success = loaded.indexOf(true) !== -1;
+					done(part_success ? null : err, tileContainer);
+					delete this._tileCallbacks[key];
+					if (part_success) {
+						// @event tilesublayererror: TileErrorEvent
+						// Fired when some sublayer(s) failed to load,
+						// but the tile also has sublayers that successed.
+						this.fire("tilesublayererror", {
+							error: err,
+							tile: tileContainer,
+							coords: coords,
+							loaded: loaded
+						});
+					}
+					return;
+				}
 				if (loaded[sublayer]) {
 					// image can first came from our cache, then updated by google map
 					this._updateTile(this._tiles[key], imgNode, sublayer);
