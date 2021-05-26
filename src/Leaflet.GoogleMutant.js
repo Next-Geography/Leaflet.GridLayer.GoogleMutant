@@ -46,6 +46,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		// Couple data structures indexed by tile key
 		this._tileCallbacks = {}; // Callbacks for promises for tiles that are expected
 		this._lru = new LRUMap(100); // Tile LRU cache
+		this._handlers = { tileunload: this._onTileunload };
 
 		this._imagesPerTile = this.options.type === "hybrid" ? 2 : 1;
 
@@ -53,6 +54,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	onAdd: function (map) {
+		this.on(this._handlers);
 		L.GridLayer.prototype.onAdd.call(this, map);
 		this._initMutantContainer();
 
@@ -84,6 +86,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	onRemove: function (map) {
+		this.off(this._handlers);
 		L.GridLayer.prototype.onRemove.call(this, map);
 		this._observer.disconnect();
 		map._container.removeChild(this._mutantContainer);
@@ -96,6 +99,11 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		if (this._mutant) {
 			google.maps.event.clearListeners(this._mutant, "idle");
 		}
+	},
+
+	_onTileunload: function (ev) { // cleanup _tileCallbacks
+		const key = this._tileCoordsToKey(ev.coords);
+		delete this._tileCallbacks[key];
 	},
 
 	// 🍂method addGoogleLayer(name: String, options?: Object): this
