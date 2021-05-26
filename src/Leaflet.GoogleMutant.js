@@ -33,15 +33,7 @@ function waitForAPI(callback, context) {
 // 🍂extends GridLayer
 L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	options: {
-		minZoom: 0,
 		maxZoom: 21, // can be 23, but ugly if more than maxNativeZoom
-		tileSize: 256,
-		subdomains: "abc",
-		errorTileUrl: "",
-		attribution: "", // The mutant container will add its own attribution anyways.
-		opacity: 1,
-		continuousWorld: false,
-		noWrap: false,
 		// 🍂option type: String = 'roadmap'
 		// Google's map type. Valid values are 'roadmap', 'satellite' or 'terrain'. 'hybrid' is not really supported.
 		type: "roadmap",
