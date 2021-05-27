@@ -331,7 +331,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			const key = this._tileCoordsToKey(coords);
 
 			// Cache img so it can also be used in subsequent tile requests
-			const key2 = key + "/" + sublayer;
+			const key2 = this._makeKey(key, sublayer);
 			this._lru.set(key2, imgNode);
 
 			if (this._tileCallbacks[key]) {
@@ -343,6 +343,10 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				}
 			}
 		}
+	},
+
+	_makeKey: function (tileKey, sublayer) {
+		return tileKey + "/" + sublayer;
 	},
 
 	_updateTile: function (tile, imgNode, sublayer) {
@@ -366,7 +370,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		tileContainer.style.textAlign = "left";
 		const loaded = this._imagesPerTile.slice(); // track already loaded sublayers
 		loaded.forEach(function (_, i) {
-			const key2 = key + "/" + i,
+			const key2 = this._makeKey(key, i),
 				imgNode = this._lru.get(key2);
 			if (imgNode) {
 				const clonedImgNode = this._clone(imgNode, i);
