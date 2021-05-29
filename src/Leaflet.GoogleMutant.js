@@ -285,13 +285,14 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	_staticRegExp: /StaticMapService\.GetMapImage/,
 
 	_roadmapSubstr: [
+		"!2sRoadmapSatellite!", // hybrid
 		"!2sRoadmap!",
 		"!2sNonRoadmap!",       // roadmap + BicyclingLayer
 		"!2sTransitFocused!",   // roadmap + TransitLayer
 		"!2sTerrain!"
 	],
 
-	_isRoadmap: function (url) {
+	_hasRoadmap: function (url) {
 		return this._roadmapSubstr.some(function (substr) {
 			return url.search(substr) !== -1;
 		});
@@ -308,10 +309,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				x: match[2],
 				y: match[3],
 			};
-			if (this._isRoadmap(imgNode.src)) {
-				sublayer = 0;
-			} else if (imgNode.src.search("!2sRoadmapSatellite!") !== -1) {
-				sublayer = 1; // hybrid
+			if (this._hasRoadmap(imgNode.src)) {
+				sublayer = 1;
 			} else {
 				sublayer = 2; // other (e.g. kml)
 			}
@@ -323,8 +322,8 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 					y: match[2],
 					z: match[3],
 				};
+				sublayer = 0;
 			}
-			sublayer = 0;
 		}
 
 		if (coords) {
@@ -479,7 +478,12 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	_setImagesPerTile: function () {
-		this._imagesPerTile = this.options.type === "hybrid" ? [false, false] : [false];
+		const hasSatellite = this.options.type === "satellite" ||
+			this.options.type === "hybrid";
+		this._imagesPerTile = hasSatellite ? [false] : [];
+		if (this.options.type !== "satellite") {
+			this._imagesPerTile[1] = false;
+		}
 		if (this._subLayers && this._subLayers.KmlLayer) {
 			this._imagesPerTile[2] = false;
 		}
