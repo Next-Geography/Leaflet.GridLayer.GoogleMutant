@@ -345,7 +345,20 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	_makeKey: function (tileKey, sublayer) {
-		return tileKey + "/" + sublayer;
+		const key = [tileKey, sublayer];
+		if (sublayer === 1) {
+			key.push(this.options.type);
+			const subs = this._subLayers;
+			if (subs) {
+				["BicyclingLayer", "TrafficLayer", "TransitLayer"].forEach(function (layer) {
+					if (subs[layer]) { key.push(layer); }
+				});
+			}
+			if (this.options.styles) {
+				key.push(L.Util.stamp(this.options.styles));
+			}
+		}
+		return key.join("/");
 	},
 
 	_updateTile: function (tile, imgNode, sublayer) {
