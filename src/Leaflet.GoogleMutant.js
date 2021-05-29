@@ -352,6 +352,10 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			tile.el.replaceChild(clonedImgNode, oldImg);
 		} else {
 			tile.el.appendChild(clonedImgNode);
+			if (!L.DomUtil.hasClass(tile.el, "leaflet-tile-loaded")) {
+				// make the tile visible
+				L.GridLayer.prototype._tileReady.call(this, tile.coords, null, tile);
+			}
 		}
 	},
 
