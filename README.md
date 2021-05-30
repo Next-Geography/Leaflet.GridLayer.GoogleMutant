@@ -8,7 +8,9 @@ A [LeafletJS](http://leafletjs.com/) plugin to use Google maps basemaps.
 
 ## Compatibility
 
--   This plugin doesn't work on IE10 or lower, as [that browser doesn't implement DOM mutation observers](https://caniuse.com/#feat=mutationobserver). Chrome, Firefox, Safari, IE11 and Edge are fine.
+-   This plugin requires at least IE11, as older versions do not implement [DOM mutation observers](https://caniuse.com/#feat=mutationobserver).
+
+-   Google Maps JavaScript API [requirements](https://developers.google.com/maps/documentation/javascript/browsersupport) also should be considered.
 
 -   Starting with v0.11.0, the code relies on `Symbol` and `Map`. IE11 and [browsers that don't support `Symbol`](https://www.caniuse.com/mdn-javascript_builtins_symbol) or [don't support `Map`](https://www.caniuse.com/mdn-javascript_builtins_map) also need polyfills to work.
 
