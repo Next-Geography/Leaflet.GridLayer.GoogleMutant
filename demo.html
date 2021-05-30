@@ -22,27 +22,39 @@
 				/*    width: auto; */
 				/*    overflow: visible; */
 				position: absolute;
-				left: 15em;
+				left: 14em;
 				right: 0;
 				height: 100vh;
 			}
 			body {
 				margin: 0;
 			}
+			div.buttons {
+				position: absolute;
+				top: 10px;
+				z-index: 500
+			}
+			.buttons div {
+				margin: 2px;
+				font-size: 0.75em;
+			}
+			.buttons button {
+				width: 45px;
+			}
 		</style>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
-		<div style="position: absolute; width: 15em; top: 10px; z-index: 500">
+		<div class="buttons">
 			GoogleMutant demo
-			<div><button id="dc">DC</button><small>(flyTo)</small></div>
-			<div><button id="sf">SF</button><small>(setView, 5 sec)</small></div>
-			<div><button id="trd">TRD</button><small>(flyTo 20 sec)</small></div>
-			<div><button id="lnd">LND</button><small>(fract. zoom)</small></div>
-			<div><button id="kyiv">KIEV</button><small>(setView, fract. zoom)</small></div>
-			<div><button id="mad">MAD</button><small>(fitBounds)</small></div>
-			<div><button id="nul">NUL</button><small>(image overlay)</small></div>
-			<div><button id="stop">stop</button></div>
+			<div><button id="dc" title="Washington, D.C., USA">DC</button> (flyTo)</div>
+			<div><button id="sf" title="San Francisco, USA">SF</button> (setView, 5 sec)</div>
+			<div><button id="trd" title="Trondheim, Norway">TRD</button> (flyTo, 20 sec)</div>
+			<div><button id="lnd" title="London, United Kingdom">LND</button> (fract. zoom)</div>
+			<div><button id="kyiv" title="Kyiv, Ukraine">KIEV</button> (setView, fract. zoom)</div>
+			<div><button id="mad" title="Madrid, Spain">MAD</button> (fitBounds)</div>
+			<div><button id="nul" title="{lat: 0, lng: 0}">NUL</button> (image overlay)</div>
+			<div><button id="stop">stop</button> </div>
 		</div>
 
 		<script type="text/javascript">
