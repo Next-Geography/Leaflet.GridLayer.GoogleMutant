@@ -33,11 +33,10 @@ function waitForAPI(callback, context) {
 // 🍂extends GridLayer
 L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	options: {
-		maxZoom: 21, // can be 23, but ugly if more than maxNativeZoom
 		// 🍂option type: String = 'roadmap'
 		// Google's map type. Valid values are 'roadmap', 'satellite' or 'terrain'. 'hybrid' is not really supported.
 		type: "roadmap",
-		maxNativeZoom: 21,
+		maxNativeZoom: 22, // typically: roadmap <22, satellite <20, but depends on latlng
 	},
 
 	initialize: function (options) {

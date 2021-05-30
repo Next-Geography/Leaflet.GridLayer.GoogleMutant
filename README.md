@@ -78,11 +78,11 @@ You can also download a static copy from the CDN, or clone this git repo.
 
 -   `hybrid` mode prunes tiles before needed for no apparent reason, so the map flickers when there is a zoom change.
 
--   Even though imagery exists at zoom levels up to 23, GoogleMutant caps the max zoom level at 21.
+-   Even though imagery exists at zoom levels up to 23, GoogleMutant caps the max zoom level at 22.
 
     This is to prevent scenarios where detecting imagery at those zooms levels is hard and creates problems (e.g. when zooming in/out close to a the boundary of such hi-res imagery).
 
-    You can override this (at your own risk!) by using the `maxZoom` option with a value larger than 21.
+    You can override this (at your own risk!) by using the `maxZoom` option with a value larger than 22.
 
 -   GoogleMutant is meant to provide a reliable (and ToC-compliant) way of loading Google Map's tiles into Leaflet, nothing more.
 
