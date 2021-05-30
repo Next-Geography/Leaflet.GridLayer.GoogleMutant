@@ -184,12 +184,11 @@ export const Google = L.GridLayer.extend({
 		this.once('controls_ready', this._setupAttribution);
 	},
 
-	_attachObserver: function _attachObserver(node) {
-		if (!this._observer) this._observer = new MutationObserver(this._onMutations.bind(this));
-		this.on("remove", this._observer.disconnect.bind(this._observer));
-
-		// pass in the target node, as well as the observer options
-		this._observer.observe(node, { childList: true, subtree: true });
+	_attachObserver: function () {
+		const handle = google.maps.event.addListener(this._mutant, "tilesloaded", () => {
+			this._processGoogleTiles();
+		});
+		this.on("remove", google.maps.event.removeListener.bind(null, handle));
 	},
 
 	_processGoogleTiles: function () { // not needed with cacheing
@@ -232,24 +231,6 @@ export const Google = L.GridLayer.extend({
 		this._logoContainer = ev.positions.get(pos.BOTTOM_LEFT);
 		this._logoContainer.style.pointerEvents = "auto";
 		this._map._controlCorners.bottomleft.appendChild(this._logoContainer);
-	},
-
-	_onMutations: function _onMutations(mutations) {
-		for (var i = 0; i < mutations.length; ++i) {
-			var mutation = mutations[i];
-			for (var j = 0; j < mutation.addedNodes.length; ++j) {
-				var node = mutation.addedNodes[j];
-
-				if (node instanceof HTMLImageElement) {
-					this._onMutatedImage(node);
-				} else if (node instanceof HTMLElement) {
-					Array.prototype.forEach.call(
-						node.querySelectorAll("img"),
-						this._boundOnMutatedImage
-					);
-				}
-			}
-		}
 	},
 
 	// Only images which 'src' attrib match this will be considered for moving around.

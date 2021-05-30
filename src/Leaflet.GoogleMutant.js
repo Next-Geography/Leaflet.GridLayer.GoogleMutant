@@ -21,6 +21,32 @@ L.GridLayer.GoogleMutant = Google.extend({
 		this._lru = new LRUMap(100); // Tile LRU cache
 		L.GridLayer.Google.prototype.initialize.apply(this, arguments);
 	},
+
+	_attachObserver: function _attachObserver(node) {
+		if (!this._observer) this._observer = new MutationObserver(this._onMutations.bind(this));
+		this.on("remove", this._observer.disconnect.bind(this._observer));
+
+		// pass in the target node, as well as the observer options
+		this._observer.observe(node, { childList: true, subtree: true });
+	},
+
+	_onMutations: function _onMutations(mutations) {
+		for (var i = 0; i < mutations.length; ++i) {
+			var mutation = mutations[i];
+			for (var j = 0; j < mutation.addedNodes.length; ++j) {
+				var node = mutation.addedNodes[j];
+
+				if (node instanceof HTMLImageElement) {
+					this._onMutatedImage(node);
+				} else if (node instanceof HTMLElement) {
+					Array.prototype.forEach.call(
+						node.querySelectorAll("img"),
+						this._boundOnMutatedImage
+					);
+				}
+			}
+		}
+	},
 });
 
 // 🍂factory gridLayer.googleMutant(options)
