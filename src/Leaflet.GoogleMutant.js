@@ -71,6 +71,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				return;
 			}
 			this._initMutant();
+			this._attachObserver(this._mutantContainer);
 
 			//handle layer being added to a map for which there are no Google tiles at the given zoom
 			google.maps.event.addListenerOnce(this._mutant, "idle", () => {
@@ -85,7 +86,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 	onRemove: function (map) {
 		L.GridLayer.prototype.onRemove.call(this, map);
-		this._observer.disconnect();
 		map._container.removeChild(this._mutantContainer);
 		if (this._logoContainer) {
 			L.DomUtil.remove(this._logoContainer);
@@ -152,8 +152,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			style.height = "100%";
 		}
 		style.zIndex = -1;
-
-		this._attachObserver(this._mutantContainer);
 	},
 
 	_initMutant: function () {
@@ -189,6 +187,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 	_attachObserver: function _attachObserver(node) {
 		if (!this._observer) this._observer = new MutationObserver(this._onMutations.bind(this));
+		this.on("remove", this._observer.disconnect.bind(this._observer));
 
 		// pass in the target node, as well as the observer options
 		this._observer.observe(node, { childList: true, subtree: true });
