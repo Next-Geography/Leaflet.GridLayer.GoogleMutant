@@ -29,6 +29,9 @@ export const Google = L.GridLayer.extend({
 
 	initialize: function (options) {
 		L.GridLayer.prototype.initialize.call(this, options);
+		if (!this._lru) {
+			this._handlers = { loading: this._onLoading };
+		}
 
 		// Couple data structures indexed by tile key
 		this._tileCallbacks = {}; // Callbacks for promises for tiles that are expected
@@ -82,6 +85,15 @@ export const Google = L.GridLayer.extend({
 		if (this._mutant) {
 			google.maps.event.clearListeners(this._mutant, "idle");
 		}
+	},
+
+	_onLoading: function () {
+		for (let key in this._tiles) {
+			return; // exiting if tiles already exist
+		}
+		// No tiles (on add, after redraw(), etc),
+		// so we should reuse all existing tiles in google map container:
+		setTimeout(this._processGoogleTiles, 0);
 	},
 
 	// 🍂method addGoogleLayer(name: String, options?: Object): this
@@ -178,10 +190,13 @@ export const Google = L.GridLayer.extend({
 
 		// pass in the target node, as well as the observer options
 		this._observer.observe(node, { childList: true, subtree: true });
+	},
 
-		// if we are reusing an old _mutantContainer, we must manually detect
-		// all existing tiles in it
-		Array.prototype.forEach.call(node.querySelectorAll("img"), this._boundOnMutatedImage);
+	_processGoogleTiles: function () { // not needed with cacheing
+		Array.prototype.forEach.call(this._mutantContainer.querySelectorAll("img[role]"), (img) => {
+			img.style.visibility = "";
+			this._onMutatedImage(img);
+		});
 	},
 
 	_waitControls: function () {
