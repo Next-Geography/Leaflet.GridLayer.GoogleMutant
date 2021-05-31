@@ -171,7 +171,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			draggable: false,
 			disableDoubleClickZoom: true,
 			scrollwheel: false,
-			streetViewControl: false,
 			styles: this.options.styles || {},
 			backgroundColor: "transparent",
 		});
@@ -183,6 +182,9 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		// 🍂event spawned
 		// Fired when the mutant has been created.
 		this.fire("spawned", { mapObject: map });
+
+		this._waitControls();
+		this.once('controls_ready', this._setupAttribution);
 	},
 
 	_attachObserver: function _attachObserver(node) {
@@ -194,6 +196,41 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		// if we are reusing an old _mutantContainer, we must manually detect
 		// all existing tiles in it
 		Array.prototype.forEach.call(node.querySelectorAll("img"), this._boundOnMutatedImage);
+	},
+
+	_waitControls: function () {
+		const id = setInterval(() => {
+			const layoutManager = this._mutant.__gm.layoutManager;
+			if (!layoutManager) { return; }
+			clearInterval(id);
+			let positions;
+			// iterate through obfuscated key names to find positions set (atm: layoutManager.o)
+			Object.keys(layoutManager).forEach(function(key) {
+				const el = layoutManager[key];
+				if (el.get) {
+					if (el.get(1) instanceof Node) {
+						positions = el;
+					}
+				}
+			});
+			// 🍂event controls_ready
+			// Fired when controls positions get available (passed in `positions` property).
+			this.fire("controls_ready", { positions });
+		}, 50);
+	},
+
+	_setupAttribution: function (ev) {
+		// https://developers.google.com/maps/documentation/javascript/reference/control#ControlPosition
+		const pos = google.maps.ControlPosition;
+		const ctr = this._attributionContainer = ev.positions.get(pos.BOTTOM_RIGHT);
+		L.DomUtil.addClass(ctr, "leaflet-control leaflet-control-attribution");
+		L.DomEvent.disableClickPropagation(ctr);
+		ctr.style.height = "14px";
+		this._map._controlCorners.bottomright.appendChild(ctr);
+
+		this._logoContainer = ev.positions.get(pos.BOTTOM_LEFT);
+		this._logoContainer.style.pointerEvents = "auto";
+		this._map._controlCorners.bottomleft.appendChild(this._logoContainer);
 	},
 
 	_onMutations: function _onMutations(mutations) {
@@ -231,30 +268,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 						node.querySelectorAll('div[draggable=false][style*="text-align: center"]'),
 						L.DomUtil.remove
 					);
-
-					// Move Google attributions to leaflet's bottom-right control container
-					if (
-						node.querySelectorAll(".gmnoprint").length > 0 ||
-						node.querySelectorAll('a[title="Click to see this area on Google Maps"]')
-							.length > 0
-					) {
-						const ctr = (this._attributionContainer = L.DomUtil.create(
-							"div",
-							"leaflet-control leaflet-control-attribution"
-						));
-						L.DomEvent.disableClickPropagation(ctr);
-						ctr.style.height = "14px";
-						ctr.style.background = "none";
-						this._map._controlCorners.bottomright.appendChild(ctr);
-						ctr.appendChild(node);
-					}
-
-					// Move Google logo to leaflet's bottom-left control container
-					if (node.style.zIndex == 1000000) {
-						this._map._controlCorners.bottomleft.appendChild(node);
-						this._logoContainer = node;
-						node.style.pointerEvents = "auto";
-					}
 				}
 			}
 		}
