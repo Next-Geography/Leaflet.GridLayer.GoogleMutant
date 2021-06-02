@@ -329,6 +329,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		if (coords) {
 			const key = this._tileCoordsToKey(coords);
 
+			imgNode._timeStamp = imgNode._timeStamp || Date.now();
 			// Cache img so it can also be used in subsequent tile requests
 			const key2 = this._makeKey(key, sublayer);
 			this._lru.set(key2, imgNode);
@@ -365,7 +366,9 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		const clonedImgNode = this._clone(imgNode, sublayer);
 		const oldImg = tile.el.querySelector(`img[data-sublayer="${sublayer}"]`);
 		if (oldImg) {
-			tile.el.replaceChild(clonedImgNode, oldImg);
+			if (oldImg._timeStamp !== imgNode._timeStamp) {
+				tile.el.replaceChild(clonedImgNode, oldImg);
+			}
 		} else {
 			tile.el.appendChild(clonedImgNode);
 			if (!L.DomUtil.hasClass(tile.el, "leaflet-tile-loaded")) {
@@ -437,6 +440,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		clonedImgNode.style.position = "absolute";
 		clonedImgNode.style.zIndex = sublayer;
 		clonedImgNode.dataset.sublayer = sublayer;
+		clonedImgNode._timeStamp = imgNode._timeStamp;
 		return clonedImgNode;
 	},
 
