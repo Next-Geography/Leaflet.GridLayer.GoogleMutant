@@ -136,8 +136,6 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			this._mutantContainer.id = "_MutantContainer_" + L.Util.stamp(this._mutantContainer);
 			this._mutantContainer.style.pointerEvents = "none";
 			this._mutantContainer.style.visibility = "hidden";
-
-			L.DomEvent.off(this._mutantContainer);
 		}
 		this._map.getContainer().appendChild(this._mutantContainer);
 
