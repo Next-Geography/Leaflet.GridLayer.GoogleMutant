@@ -1,3 +1,8 @@
+# v0.13.5 (2021-02-17)
+
+* Changed default of `style` option from empty object to empty array to prevent
+  crash with latest upstream.
+
 # v0.13.4 (2021-05-05)
 
 * Fix race condition in _initMutant when layer was removed before api was ready
