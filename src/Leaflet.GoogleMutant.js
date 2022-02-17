@@ -171,7 +171,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			draggable: false,
 			disableDoubleClickZoom: true,
 			scrollwheel: false,
-			styles: this.options.styles || {},
+			styles: this.options.styles || [],
 			backgroundColor: "transparent",
 		});
 
