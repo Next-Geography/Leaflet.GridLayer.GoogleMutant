@@ -8,7 +8,9 @@ A [LeafletJS](http://leafletjs.com/) plugin to use Google maps basemaps.
 
 ## Compatibility
 
--   This plugin doesn't work on IE10 or lower, as [that browser doesn't implement DOM mutation observers](https://caniuse.com/#feat=mutationobserver). Chrome, Firefox, Safari, IE11 and Edge are fine.
+-   This plugin requires at least IE11, as older versions do not implement [DOM mutation observers](https://caniuse.com/#feat=mutationobserver).
+
+-   Google Maps JavaScript API [requirements](https://developers.google.com/maps/documentation/javascript/browsersupport) also should be considered.
 
 -   Starting with v0.11.0, the code relies on `Symbol` and `Map`. IE11 and [browsers that don't support `Symbol`](https://www.caniuse.com/mdn-javascript_builtins_symbol) or [don't support `Map`](https://www.caniuse.com/mdn-javascript_builtins_map) also need polyfills to work.
 
@@ -20,23 +22,14 @@ Include the GMaps JS API in your HTML, plus Leaflet:
 
 ```html
 <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY" async defer></script>
-<link
-	rel="stylesheet"
-	href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-	integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-	crossorigin=""
-/>
-<script
-	src="https://unpkg.com/leaflet@1.7.1/dist/leaflet-src.js"
-	integrity="sha512-I5Hd7FcJ9rZkH7uD01G3AjsuzFy3gqz7HIJvzFZGFt2mrCS4Piw9bYZvCgUE0aiJuiZFYIJIwpbNnDIM6ohTrg=="
-	crossorigin=""
-></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" crossorigin="" />
+<script src="https://unpkg.com/leaflet/dist/leaflet-src.js" crossorigin=""></script>
 ```
 
 Include the GoogleMutant javascript file:
 
 ```html
-<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant/dist/Leaflet.GoogleMutant.js"></script>
 ```
 
 Then, you can create an instance of `L.GridLayer.GoogleMutant` on your JS code:

@@ -8,50 +8,53 @@
 
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-		<!--  <link rel="stylesheet" href="../Leaflet/dist/leaflet.css" />
-		<script type="text/javascript" src="../Leaflet/dist/leaflet-src.js"></script>-->
+		<!--link rel="stylesheet" href="../Leaflet/dist/leaflet.css" />
+		<script type="text/javascript" src="../Leaflet/dist/leaflet-src.js"></script-->
 
-		<link
-			rel="stylesheet"
-			href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-			integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-			crossorigin=""
-		/>
-		<script
-			src="https://unpkg.com/leaflet@1.7.1/dist/leaflet-src.js"
-			integrity="sha512-I5Hd7FcJ9rZkH7uD01G3AjsuzFy3gqz7HIJvzFZGFt2mrCS4Piw9bYZvCgUE0aiJuiZFYIJIwpbNnDIM6ohTrg=="
-			crossorigin=""
-		></script>
+		<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" crossorigin="" />
+		<script src="https://unpkg.com/leaflet/dist/leaflet-src.js" crossorigin=""></script>
 
-		<!-- 		<script type="text/javascript" src="dist/Leaflet.GoogleMutant.js"></script> -->
-		<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+		<!--script type="text/javascript" src="dist/Leaflet.GoogleMutant.js"></script-->
+		<script src="https://unpkg.com/leaflet.gridlayer.googlemutant/dist/Leaflet.GoogleMutant.js"></script>
 		<style>
 			#map {
 				/*    margin: 32px; */
 				/*    width: auto; */
 				/*    overflow: visible; */
 				position: absolute;
-				left: 15em;
+				left: 14em;
 				right: 0;
 				height: 100vh;
 			}
 			body {
 				margin: 0;
 			}
+			div.buttons {
+				position: absolute;
+				top: 10px;
+				z-index: 500
+			}
+			.buttons div {
+				margin: 2px;
+				font-size: 0.75em;
+			}
+			.buttons button {
+				width: 45px;
+			}
 		</style>
 	</head>
 	<body>
 		<div id="map" class="map"></div>
-		<div style="position: absolute; width: 15em; top: 10px; z-index: 500">
+		<div class="buttons">
 			GoogleMutant demo
-			<div><button id="dc">DC</button><small>(flyTo)</small></div>
-			<div><button id="sf">SF</button><small>(setView, 5 sec)</small></div>
-			<div><button id="trd">TRD</button><small>(flyTo 20 sec)</small></div>
-			<div><button id="lnd">LND</button><small>(fract. zoom)</small></div>
-			<div><button id="kyiv">KIEV</button><small>(setView, fract. zoom)</small></div>
-			<div><button id="mad">MAD</button><small>(fitBounds)</small></div>
-			<div><button id="nul">NUL</button><small>(image overlay)</small></div>
-			<div><button id="stop">stop</button></div>
+			<div><button id="dc" title="Washington, D.C., USA">DC</button> (flyTo)</div>
+			<div><button id="sf" title="San Francisco, USA">SF</button> (setView, 5 sec)</div>
+			<div><button id="trd" title="Trondheim, Norway">TRD</button> (flyTo, 20 sec)</div>
+			<div><button id="lnd" title="London, United Kingdom">LND</button> (fract. zoom)</div>
+			<div><button id="kyiv" title="Kyiv, Ukraine">KIEV</button> (setView, fract. zoom)</div>
+			<div><button id="mad" title="Madrid, Spain">MAD</button> (fitBounds)</div>
+			<div><button id="nul" title="{lat: 0, lng: 0}">NUL</button> (image overlay)</div>
+			<div><button id="stop">stop</button> </div>
 		</div>
 
 		<script type="text/javascript">
