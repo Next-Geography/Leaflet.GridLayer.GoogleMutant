@@ -220,6 +220,9 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	_setupAttribution: function (ev) {
+		if (!this._map) {
+			return;
+		}
 		// https://developers.google.com/maps/documentation/javascript/reference/control#ControlPosition
 		const pos = google.maps.ControlPosition;
 		const ctr = this._attributionContainer = ev.positions.get(pos.BOTTOM_RIGHT);
