@@ -35,7 +35,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	options: {
 		maxZoom: 21, // can be 23, but ugly if more than maxNativeZoom
 		// 🍂option type: String = 'roadmap'
-		// Google's map type. Valid values are 'roadmap', 'satellite' or 'terrain'. 'hybrid' is not really supported.
+		// Google's map type. Valid values are 'roadmap', 'satellite', 'terrain' or 'hybrid'.
 		type: "roadmap",
 		maxNativeZoom: 21,
 	},
@@ -257,14 +257,10 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	// Only images which 'src' attrib match this will be considered for moving around.
 	// Looks like some kind of string-based protobuf, maybe??
 	// Only the roads (and terrain, and vector-based stuff) match this pattern
-	_roadRegexp: /!1i(\d+)!2i(\d+)!3i(\d+)!/,
+	_roadRegexp: /!1i(\d+)!2i(\d+)!3i(\d+|VinaFnapurmBegrtn)!/,
 
 	// On the other hand, raster imagery matches this other pattern
-	_satRegexp: /x=(\d+)&y=(\d+)&z=(\d+)/,
-
-	// On small viewports, when zooming in/out, a static image is requested
-	// This will not be moved around, just removed from the DOM.
-	_staticRegExp: /StaticMapService\.GetMapImage/,
+	_satRegexp: /x=(\d+)&y=(\d+)&z=(\d+|VinaFnapurmBegrtn)/,
 
 	_onMutatedImage: function _onMutatedImage(imgNode) {
 		let coords;

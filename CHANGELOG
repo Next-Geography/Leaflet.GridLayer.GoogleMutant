@@ -1,3 +1,8 @@
+
+# v0.14.0
+
+* Updated regexps to cover a rare case.
+
 # v0.13.5 (2022-02-17)
 
 * Changed default of `style` option from empty object to empty array to prevent
