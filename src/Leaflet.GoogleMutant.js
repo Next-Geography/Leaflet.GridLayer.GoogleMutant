@@ -12,23 +12,6 @@ this stuff is worth it, you can buy me a beer in return.
 
 import { LRUMap } from "./lru_map.js";
 
-function waitForAPI(callback, context) {
-	let checkCounter = 0,
-		intervalId = null;
-
-	intervalId = setInterval(function () {
-		if (checkCounter >= 20) {
-			clearInterval(intervalId);
-			throw new Error("window.google not found after 10 seconds");
-		}
-		if (!!window.google && !!window.google.maps && !!window.google.maps.Map) {
-			clearInterval(intervalId);
-			callback.call(context);
-		}
-		++checkCounter;
-	}, 500);
-}
-
 // 🍂class GridLayer.GoogleMutant
 // 🍂extends GridLayer
 L.GridLayer.GoogleMutant = L.GridLayer.extend({
@@ -54,48 +37,28 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 	onAdd: function (map) {
 		L.GridLayer.prototype.onAdd.call(this, map);
-		this._initMutantContainer();
-
-		// Attribution and logo nodes are not mutated a second time if the
-		// mutant is removed and re-added to the map, hence they are
-		// not cleaned up on layer removal, so they can be added here.
-		if (this._logoContainer) {
-			map._controlCorners.bottomleft.appendChild(this._logoContainer);
+		if (this._mutantContainer) {
+			this._mutantOnAdd();
+		} else { // first run
+			this._initMutantContainer();
+			this.initApi(this._initMutant.bind(this));
 		}
-		if (this._attributionContainer) {
-			map._controlCorners.bottomright.appendChild(this._attributionContainer);
-		}
-
-		waitForAPI(() => {
-			if (!this._map) {
-				return;
-			}
-			this._initMutant();
-
-			//handle layer being added to a map for which there are no Google tiles at the given zoom
-			google.maps.event.addListenerOnce(this._mutant, "idle", () => {
-				if (!this._map) {
-					return;
-				}
-				this._checkZoomLevels();
-				this._mutantIsReady = true;
-			});
-		});
 	},
 
 	onRemove: function (map) {
 		L.GridLayer.prototype.onRemove.call(this, map);
-		this._observer.disconnect();
 		map._container.removeChild(this._mutantContainer);
+		if (!this._mutant) { return; }
+
+		this._observer.disconnect();
+
 		if (this._logoContainer) {
 			L.DomUtil.remove(this._logoContainer);
 		}
 		if (this._attributionContainer) {
 			L.DomUtil.remove(this._attributionContainer);
 		}
-		if (this._mutant) {
-			google.maps.event.clearListeners(this._mutant, "idle");
-		}
+		google.maps.event.clearListeners(this._mutant, "idle");
 	},
 
 	// 🍂method addGoogleLayer(name: String, options?: Object): this
@@ -128,17 +91,18 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	_initMutantContainer: function () {
-		if (!this._mutantContainer) {
-			this._mutantContainer = L.DomUtil.create(
-				"div",
-				"leaflet-google-mutant leaflet-top leaflet-left"
-			);
-			this._mutantContainer.id = "_MutantContainer_" + L.Util.stamp(this._mutantContainer);
-			this._mutantContainer.style.pointerEvents = "none";
-			this._mutantContainer.style.visibility = "hidden";
+		this._mutantContainer = L.DomUtil.create(
+			"div",
+			"leaflet-google-mutant leaflet-top leaflet-left"
+		);
+		this._mutantContainer.id = "_MutantContainer_" + L.Util.stamp(this._mutantContainer);
+		this._mutantContainer.style.pointerEvents = "none";
 
-			L.DomEvent.off(this._mutantContainer);
-		}
+		L.DomEvent.off(this._mutantContainer);
+	},
+
+	_mutantOnAdd: function () {
+		if (!this._mutant) { return; }
 		this._map.getContainer().appendChild(this._mutantContainer);
 
 		this.setOpacity(this.options.opacity);
@@ -154,13 +118,28 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		style.zIndex = -1;
 
 		this._attachObserver(this._mutantContainer);
+
+		// Attribution and logo nodes are not mutated a second time if the
+		// mutant is removed and re-added to the map, hence they are
+		// not cleaned up on layer removal, so they can be added here.
+		if (this._logoContainer) {
+			map._controlCorners.bottomleft.appendChild(this._logoContainer);
+		}
+		if (this._attributionContainer) {
+			map._controlCorners.bottomright.appendChild(this._attributionContainer);
+		}
+
+		//handle layer being added to a map for which there are no Google tiles at the given zoom
+		google.maps.event.addListenerOnce(this._mutant, "idle", () => {
+			if (!this._map) {
+				return;
+			}
+			this._checkZoomLevels();
+			this._mutantIsReady = true;
+		});
 	},
 
 	_initMutant: function () {
-		if (this._mutant) {
-			return;
-		}
-
 		var map = new google.maps.Map(this._mutantContainer, {
 			center: { lat: 0, lng: 0 },
 			zoom: 0,
@@ -177,14 +156,33 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 		this._mutant = map;
 
-		this._update();
-
+		if (this._map) {
+			this._mutantOnAdd();
+		}
 		// 🍂event spawned
 		// Fired when the mutant has been created.
 		this.fire("spawned", { mapObject: map });
 
 		this._waitControls();
 		this.once('controls_ready', this._setupAttribution);
+	},
+
+	// overridable method
+	initApi: function (ready) {
+		let checkCounter = 0,
+			intervalId = null;
+
+		intervalId = setInterval(() => {
+			if (checkCounter >= 20) {
+				clearInterval(intervalId);
+				throw new Error("window.google not found after 10 seconds");
+			}
+			if (window.google && window.google.maps && window.google.maps.Map) {
+				clearInterval(intervalId);
+				ready();
+			}
+			++checkCounter;
+		}, 500);
 	},
 
 	_attachObserver: function _attachObserver(node) {
