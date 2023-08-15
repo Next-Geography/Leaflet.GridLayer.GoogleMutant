@@ -161,7 +161,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			return;
 		}
 
-		var map = new google.maps.Map(this._mutantContainer, {
+		var options = {
 			center: { lat: 0, lng: 0 },
 			zoom: 0,
 			tilt: 0,
@@ -173,7 +173,11 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			scrollwheel: false,
 			styles: this.options.styles || [],
 			backgroundColor: "transparent",
-		});
+		};
+		if (this.options.mapId != null) {
+			options.mapId = this.options.mapId;
+		}
+		var map = new google.maps.Map(this._mutantContainer, options);
 
 		this._mutant = map;
 
