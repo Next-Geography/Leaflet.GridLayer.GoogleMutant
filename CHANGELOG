@@ -1,4 +1,8 @@
 
+# v0.14.1
+
+* Unignore `src/` in npm to cover module loading
+
 # v0.14.0
 
 * Updated regexps to cover a rare case.
