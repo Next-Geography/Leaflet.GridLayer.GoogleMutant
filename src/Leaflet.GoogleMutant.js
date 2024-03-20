@@ -46,13 +46,13 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		// Couple data structures indexed by tile key
 		this._tileCallbacks = {}; // Callbacks for promises for tiles that are expected
 		this._lru = new LRUMap(100); // Tile LRU cache
-
-		this._imagesPerTile = this.options.type === "hybrid" ? 2 : 1;
+		this._handlers = { tileunload: this._onTileunload };
 
 		this._boundOnMutatedImage = this._onMutatedImage.bind(this);
 	},
 
 	onAdd: function (map) {
+		this.on(this._handlers);
 		L.GridLayer.prototype.onAdd.call(this, map);
 		this._initMutantContainer();
 
@@ -80,10 +80,26 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				this._checkZoomLevels();
 				this._mutantIsReady = true;
 			});
+			this._setupTilesTimeout();
 		});
 	},
 
+	_setupTilesTimeout: function () {
+		const handle = google.maps.event.addListener(this._mutant, "tilesloaded", () => {
+			const expired = Object.keys(this._tileCallbacks);
+			setTimeout(() => {
+				expired.forEach((key) => {
+					if (this._tileCallbacks[key]) {
+						this._tileCallbacks[key](null, "timeout");
+					}
+				});
+			}, 100);
+		});
+		this.once("remove", google.maps.event.removeListener.bind(null, handle));
+	},
+
 	onRemove: function (map) {
+		this.off(this._handlers);
 		L.GridLayer.prototype.onRemove.call(this, map);
 		this._observer.disconnect();
 		map._container.removeChild(this._mutantContainer);
@@ -96,6 +112,11 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 		if (this._mutant) {
 			google.maps.event.clearListeners(this._mutant, "idle");
 		}
+	},
+
+	_onTileunload: function (ev) { // cleanup _tileCallbacks
+		const key = this._tileCoordsToKey(ev.coords);
+		delete this._tileCallbacks[key];
 	},
 
 	// 🍂method addGoogleLayer(name: String, options?: Object): this
@@ -266,10 +287,24 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	// On the other hand, raster imagery matches this other pattern
 	_satRegexp: /x=(\d+)&y=(\d+)&z=(\d+|VinaFnapurmBegrtn)/,
 
+	_roadmapSubstr: [
+		"!2sRoadmapSatellite!", // hybrid
+		"!2sRoadmap!",
+		"!2sNonRoadmap!",       // roadmap + BicyclingLayer
+		"!2sTransitFocused!",   // roadmap + TransitLayer
+		"!2sTerrain!"
+	],
+
+	_hasRoadmap: function (url) {
+		return this._roadmapSubstr.some(function (substr) {
+			return url.search(substr) !== -1;
+		});
+	},
+
 	_onMutatedImage: function _onMutatedImage(imgNode) {
 		let coords;
 		let match = imgNode.src.match(this._roadRegexp);
-		let sublayer = 0;
+		let sublayer;
 
 		if (match) {
 			coords = {
@@ -277,9 +312,10 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 				x: match[2],
 				y: match[3],
 			};
-			if (this._imagesPerTile > 1) {
-				imgNode.style.zIndex = 1;
+			if (this._hasRoadmap(imgNode.src)) {
 				sublayer = 1;
+			} else {
+				sublayer = 2; // other (e.g. kml)
 			}
 		} else {
 			match = imgNode.src.match(this._satRegexp);
@@ -289,23 +325,58 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 					y: match[2],
 					z: match[3],
 				};
+				sublayer = 0;
 			}
-			// imgNode.style.zIndex = 0;
-			sublayer = 0;
 		}
 
 		if (coords) {
-			var tileKey = this._tileCoordsToKey(coords);
-			imgNode.style.position = "absolute";
+			const key = this._tileCoordsToKey(coords);
 
-			var key = tileKey + "/" + sublayer;
+			imgNode._timeStamp = imgNode._timeStamp || Date.now();
 			// Cache img so it can also be used in subsequent tile requests
-			this._lru.set(key, imgNode);
+			const key2 = this._makeKey(key, sublayer);
+			this._lru.set(key2, imgNode);
 
-			if (key in this._tileCallbacks && this._tileCallbacks[key]) {
-				// Use the tile for *all* pending callbacks. They'll be cloned anyway.
-				this._tileCallbacks[key].forEach((callback) => callback(imgNode));
-				delete this._tileCallbacks[key];
+			if (this._tileCallbacks[key]) {
+				this._tileCallbacks[key].forEach(callback => callback(imgNode, sublayer));
+			} else {
+				const tile = this._tiles[key];
+				if (tile) {
+					this._updateTile(tile, imgNode, sublayer);
+				}
+			}
+		}
+	},
+
+	_makeKey: function (tileKey, sublayer) {
+		const key = [tileKey, sublayer];
+		if (sublayer === 1) {
+			key.push(this.options.type);
+			const subs = this._subLayers;
+			if (subs) {
+				["BicyclingLayer", "TrafficLayer", "TransitLayer"].forEach(function (layer) {
+					if (subs[layer]) { key.push(layer); }
+				});
+			}
+			if (this.options.styles) {
+				key.push(L.Util.stamp(this.options.styles));
+			}
+		}
+		return key.join("/");
+	},
+
+	_updateTile: function (tile, imgNode, sublayer) {
+		const clonedImgNode = this._clone(imgNode, sublayer);
+		const oldImg = tile.el.querySelector(`img[data-sublayer="${sublayer}"]`);
+		if (oldImg) {
+			if (oldImg._timeStamp !== imgNode._timeStamp) {
+				tile.el.replaceChild(clonedImgNode, oldImg);
+			}
+		} else {
+			tile.el.appendChild(clonedImgNode);
+			if (!L.DomUtil.hasClass(tile.el, "leaflet-tile-loaded")) {
+				// make the tile visible
+				L.GridLayer.prototype._tileReady.call(this, tile.coords, null, tile);
 			}
 		}
 	},
@@ -315,40 +386,64 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 			tileContainer = L.DomUtil.create("div");
 
 		tileContainer.style.textAlign = "left";
-		tileContainer.dataset.pending = this._imagesPerTile;
-		done = done.bind(this, null, tileContainer);
-
-		for (var i = 0; i < this._imagesPerTile; ++i) {
-			const key2 = key + "/" + i,
+		const loaded = this._imagesPerTile.slice(); // track already loaded sublayers
+		loaded.forEach(function (_, i) {
+			const key2 = this._makeKey(key, i),
 				imgNode = this._lru.get(key2);
 			if (imgNode) {
-				tileContainer.appendChild(this._clone(imgNode));
-				--tileContainer.dataset.pending;
-			} else {
-				this._tileCallbacks[key2] = this._tileCallbacks[key2] || [];
-				this._tileCallbacks[key2].push(
-					function (c /*, k2*/) {
-						return function (imgNode) {
-							c.appendChild(this._clone(imgNode));
-							--c.dataset.pending;
-							if (!parseInt(c.dataset.pending)) {
-								done();
-							}
-						}.bind(this);
-					}.bind(this)(tileContainer /*, key2*/)
-				);
+				const clonedImgNode = this._clone(imgNode, i);
+				clonedImgNode._fromCache = true; // for debug
+				tileContainer.appendChild(clonedImgNode);
+				loaded[i] = true;
 			}
-		}
-
-		if (!parseInt(tileContainer.dataset.pending)) {
-			L.Util.requestAnimFrame(done);
+		}, this);
+		if (loaded.indexOf(false) === -1) {
+			L.Util.requestAnimFrame(done.bind(this, null, tileContainer));
+		} else {
+			this._tileCallbacks[key] = this._tileCallbacks[key] || [];
+			this._tileCallbacks[key].push(function (imgNode, sublayer) { // or (null, "error message")
+				if (!imgNode) {
+					const err = sublayer;
+					const part_success = loaded.indexOf(true) !== -1;
+					done(part_success ? null : err, tileContainer);
+					delete this._tileCallbacks[key];
+					if (part_success) {
+						// @event tilesublayererror: TileErrorEvent
+						// Fired when some sublayer(s) failed to load,
+						// but the tile also has sublayers that successed.
+						this.fire("tilesublayererror", {
+							error: err,
+							tile: tileContainer,
+							coords: coords,
+							loaded: loaded
+						});
+					}
+					return;
+				}
+				if (loaded[sublayer]) {
+					// image can first came from our cache, then updated by google map
+					this._updateTile(this._tiles[key], imgNode, sublayer);
+					return;
+				}
+				const clonedImgNode = this._clone(imgNode, sublayer);
+				tileContainer.appendChild(clonedImgNode);
+				loaded[sublayer] = true;
+				if (loaded.indexOf(false) === -1) {
+					done(null, tileContainer);
+					delete this._tileCallbacks[key];
+				}
+			}.bind(this));
 		}
 		return tileContainer;
 	},
 
-	_clone: function (imgNode) {
+
+	_clone: function (imgNode, sublayer) {
 		const clonedImgNode = imgNode.cloneNode(true);
-		clonedImgNode.style.visibility = "visible";
+		clonedImgNode.style.position = "absolute";
+		clonedImgNode.style.zIndex = sublayer;
+		clonedImgNode.dataset.sublayer = sublayer;
+		clonedImgNode._timeStamp = imgNode._timeStamp;
 		return clonedImgNode;
 	},
 
@@ -378,26 +473,40 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 	},
 
 	_update: function (center) {
+		if (!this._mutant) { return; }
+
 		// zoom level check needs to happen before super's implementation (tile addition/creation)
 		// otherwise tiles may be missed if maxNativeZoom is not yet correctly determined
-		if (this._mutant) {
-			center = center || this._map.getCenter();
-			const _center = new google.maps.LatLng(center.lat, center.lng),
-				zoom = Math.round(this._map.getZoom()),
-				mutantZoom = this._mutant.getZoom();
 
-			this._mutant.setCenter(_center);
+		center = center || this._map.getCenter();
+		const _center = new google.maps.LatLng(center.lat, center.lng),
+			zoom = Math.round(this._map.getZoom()),
+			mutantZoom = this._mutant.getZoom();
 
-			//ignore fractional zoom levels
-			if (zoom !== mutantZoom) {
-				this._mutant.setZoom(zoom);
+		this._mutant.setCenter(_center);
 
-				if (this._mutantIsReady) this._checkZoomLevels();
-				//else zoom level check will be done later by 'idle' handler
-			}
+		//ignore fractional zoom levels
+		if (zoom !== mutantZoom) {
+			this._mutant.setZoom(zoom);
+
+			if (this._mutantIsReady) this._checkZoomLevels();
+			//else zoom level check will be done later by 'idle' handler
 		}
 
+		this._setImagesPerTile();
 		L.GridLayer.prototype._update.call(this, center);
+	},
+
+	_setImagesPerTile: function () {
+		const hasSatellite = this.options.type === "satellite" ||
+			this.options.type === "hybrid";
+		this._imagesPerTile = hasSatellite ? [false] : [];
+		if (this.options.type !== "satellite") {
+			this._imagesPerTile[1] = false;
+		}
+		if (this._subLayers && this._subLayers.KmlLayer) {
+			this._imagesPerTile[2] = false;
+		}
 	},
 
 	// @method whenReady(fn: Function, context?: Object): this

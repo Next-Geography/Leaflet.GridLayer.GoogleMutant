@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Leaflet debug page</title>
+
+		<!--  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY" async defer></script> -->
+		<script src="https://maps.googleapis.com/maps/api/js?key=" async defer></script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<!--  <link rel="stylesheet" href="../Leaflet/dist/leaflet.css" />
+		<script type="text/javascript" src="../Leaflet/dist/leaflet-src.js"></script>-->
+
+		<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" crossorigin="" />
+		<script src="https://unpkg.com/leaflet/dist/leaflet-src.js" crossorigin="" ></script>
+
+		<!--script type="text/javascript" src="dist/Leaflet.GoogleMutant.js"></script-->
+		<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+		<style>
+			#map {
+				left: 0;
+				right: 0;
+				height: 100vh;
+			}
+			body {
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="map" class="map"></div>
+
+		<script type="text/javascript">
+			var mapopts = {
+				// zoomSnap: 0.25,
+			};
+
+			var map = L.map("map", mapopts).setView([41.876,-87.624], 11);
+
+			var road = L.gridLayer.googleMutant({
+				maxZoom: 24,
+				type: "roadmap",
+			}).addTo(map);
+
+			road.addGoogleLayer('KmlLayer', {
+				url: 'https://googlearchive.github.io/js-v2-samples/ggeoxml/cta.kml',
+				preserveViewport: true
+			}).on({
+				tileerror: console.error,
+				tilesublayererror: console.warn
+			});
+		</script>
+	</body>
+</html>
