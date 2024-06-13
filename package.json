@@ -4,6 +4,7 @@
 	"description": "A plugin for LeafletJS to use Google maps basemaps.",
 	"module": "src/Leaflet.GoogleMutant.js",
 	"browser": "dist/Leaflet.GoogleMutant.js",
+	"main": "dist/Leaflet.GoogleMutant.js",
 	"repository": {
 		"type": "git",
 		"url": "https://gitlab.com/IvanSanchez/Leaflet.GridLayer.GoogleMutant.git"
