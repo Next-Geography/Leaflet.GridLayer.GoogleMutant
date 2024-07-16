@@ -360,14 +360,14 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 		if (!zoomLevel || !gMapZoomLevel) return;
 
-		if (
-			gMapZoomLevel !== zoomLevel || //zoom levels are out of sync, Google doesn't have data
-			gMapZoomLevel > this.options.maxNativeZoom
-		) {
-			//at current location, Google does have data (contrary to maxNativeZoom)
-			//Update maxNativeZoom
-			this._setMaxNativeZoom(gMapZoomLevel);
-		}
+		// if (
+		// 	gMapZoomLevel !== zoomLevel || //zoom levels are out of sync, Google doesn't have data
+		// 	gMapZoomLevel > this.options.maxNativeZoom
+		// ) {
+		// 	//at current location, Google does have data (contrary to maxNativeZoom)
+		// 	//Update maxNativeZoom
+		// 	this._setMaxNativeZoom(gMapZoomLevel);
+		// }
 	},
 
 	_setMaxNativeZoom: function (zoomLevel) {
