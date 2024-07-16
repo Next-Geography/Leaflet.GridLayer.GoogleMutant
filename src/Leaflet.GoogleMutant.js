@@ -45,7 +45,7 @@ L.GridLayer.GoogleMutant = L.GridLayer.extend({
 
 		// Couple data structures indexed by tile key
 		this._tileCallbacks = {}; // Callbacks for promises for tiles that are expected
-		this._lru = new LRUMap(500); // Tile LRU cache
+		this._lru = new LRUMap(800); // Tile LRU cache
 
 		this._imagesPerTile = this.options.type === "hybrid" ? 2 : 1;
 
